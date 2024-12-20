@@ -1,0 +1,69 @@
+name: CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Azure CLI
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Build and Push Docker Image
+      run: |
+        az acr login --name ${{ secrets.ACR_NAME }}
+        docker build -t ${{ secrets.ACR_NAME }}.azurecr.io/ai-agents:${GITHUB_SHA::8} .
+        docker push ${{ secrets.ACR_NAME }}.azurecr.io/ai-agents:${GITHUB_SHA::8}
+
+    - name: Deploy to AKS
+      uses: azure/k8s-deploy@v1
+      with:
+        manifests: |
+          infrastructure/kubernetes/base/deployment.yaml
+          infrastructure/kubernetes/base/service.yaml
+        images: |
+          ${{ secrets.ACR_NAME }}.azurecr.io/ai-agents:${GITHUB_SHA::8}
+        kubectl-version: 'latest'
+EOLcat > .github/workflows/cd.yml << EOL
+name: CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Azure CLI
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Build and Push Docker Image
+      run: |
+        az acr login --name ${{ secrets.ACR_NAME }}
+        docker build -t ${{ secrets.ACR_NAME }}.azurecr.io/ai-agents:${GITHUB_SHA::8} .
+        docker push ${{ secrets.ACR_NAME }}.azurecr.io/ai-agents:${GITHUB_SHA::8}
+
+    - name: Deploy to AKS
+      uses: azure/k8s-deploy@v1
+      with:
+        manifests: |
+          infrastructure/kubernetes/base/deployment.yaml
+          infrastructure/kubernetes/base/service.yaml
+        images: |
+          ${{ secrets.ACR_NAME }}.azurecr.io/ai-agents:${GITHUB_SHA::8}
+        kubectl-version: 'latest'

@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
+      - AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET}
+      - AZURE_TENANT_ID=${AZURE_TENANT_ID}
+    volumes:
+      - ./src:/app/src
+    command: uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
+
+  redis:
+    image: redis:6-alpine
+    ports:
+      - "6379:6379"
